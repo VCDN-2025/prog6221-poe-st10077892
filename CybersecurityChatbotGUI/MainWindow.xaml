@@ -1,0 +1,173 @@
+﻿<Window x:Class="CybersecurityChatbotGUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CybersecurityChatbotGUI"
+        mc:Ignorable="d"
+        Title="Cybersecurity Chatbot" Height="600" Width="850"
+        Loaded="Window_Loaded"
+        Background="#FFF0F5">
+
+    <Grid Margin="10">
+        <TabControl Background="#FFE6F0" 
+                    BorderBrush="#F4A8C4" 
+                    BorderThickness="1" 
+                    Padding="10" 
+                    FontSize="14" 
+                    Foreground="#7B2A5A"
+                    FontFamily="Segoe UI Semibold">
+
+            <!-- Chat Tab -->
+            <TabItem Header="💬 Chat" Background="#FFF5FA" >
+                <StackPanel Margin="10">
+                    <TextBlock Text="Cybersecurity Chatbot" FontWeight="Bold" FontSize="22" Foreground="#D147A3" Margin="0,0,0,15" FontFamily="Segoe Script"/>
+                    <Border BorderBrush="#F4A8C4" BorderThickness="2" Background="White" Padding="8" >
+                        <ScrollViewer Height="220" VerticalScrollBarVisibility="Auto">
+                            <TextBlock x:Name="ChatOutput" TextWrapping="Wrap" Foreground="#7B2A5A" FontSize="14"/>
+                        </ScrollViewer>
+                    </Border>
+                    <DockPanel Margin="0,15,0,0">
+                        <TextBox x:Name="UserInput" Height="38" Width="600" Margin="0,0,10,0" FontSize="14" Background="#FFE6F0" Foreground="#7B2A5A" BorderBrush="#F4A8C4" 
+                                 Padding="6" 
+                                 VerticalContentAlignment="Center"
+                                 CaretBrush="#D147A3"
+                                 FontFamily="Segoe UI"/>
+                        <Button Content="Send" Width="100" Height="38" Click="SendMessage_Click" 
+                                Background="#D147A3" Foreground="White" FontWeight="Bold" 
+                                BorderThickness="0" Cursor="Hand" 
+                                >
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="#D147A3"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" 
+                                                        Padding="6" >
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#E673B8"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter Property="Background" Value="#B23781"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </DockPanel>
+                </StackPanel>
+            </TabItem>
+
+            <!-- Task Assistant Tab -->
+            <TabItem Header="🗂 Task Assistant" Background="#FFF5FA">
+                <StackPanel Margin="10">
+                    <TextBlock Text="Add Cybersecurity Task" FontWeight="Bold" FontSize="22" Foreground="#D147A3" Margin="0,0,0,15" FontFamily="Segoe Script"/>
+                    <Label Content="Task Title:" FontWeight="SemiBold" Foreground="#7B2A5A" FontFamily="Segoe UI"/>
+                    <TextBox x:Name="TaskTitle" Height="32" Background="#FFE6F0" Foreground="#7B2A5A" BorderBrush="#F4A8C4" Padding="6" FontFamily="Segoe UI"/>
+                    <Label Content="Task Description:" FontWeight="SemiBold" Margin="0,10,0,0" Foreground="#7B2A5A" FontFamily="Segoe UI"/>
+                    <TextBox x:Name="TaskDescription" Height="60" TextWrapping="Wrap" Background="#FFE6F0" Foreground="#7B2A5A" BorderBrush="#F4A8C4" Padding="6" FontFamily="Segoe UI"/>
+                    <Label Content="Reminder Date:" FontWeight="SemiBold" Margin="0,10,0,0" Foreground="#7B2A5A" FontFamily="Segoe UI"/>
+                    <DatePicker x:Name="TaskReminder" Height="32" Background="#FFE6F0" Foreground="#7B2A5A" BorderBrush="#F4A8C4" FontFamily="Segoe UI"/>
+                    <Button Content="Add Task" Margin="0,15,0,0" Height="38" Width="140" Click="AddTask_Click" Background="#D147A3" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#E673B8"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter Property="Background" Value="#B23781"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Border BorderBrush="#F4A8C4" BorderThickness="2" Background="White" Margin="0,15,0,0" Padding="8">
+                        <ScrollViewer Height="150">
+                            <TextBlock x:Name="TaskOutput" TextWrapping="Wrap" Foreground="#7B2A5A" FontSize="14"/>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </TabItem>
+
+            <!-- Cyber Quiz Tab -->
+            <TabItem Header="🧠 Cyber Quiz" Background="#FFF5FA">
+                <StackPanel Margin="10">
+                    <TextBlock Text="Cybersecurity Quiz" FontWeight="Bold" FontSize="22" Foreground="#F48FB1" Margin="0,0,0,10" FontFamily="Segoe Script"/>
+                    <TextBlock x:Name="QuizQuestion" TextWrapping="Wrap" FontSize="15" Foreground="#7B2A5A" FontFamily="Segoe UI"/>
+                    <Label Content="Your Answer (A/B/C/True/False):" FontWeight="SemiBold" Foreground="#7B2A5A" Margin="0,10,0,2" FontFamily="Segoe UI"/>
+                    <TextBox x:Name="QuizAnswer" Height="32" Background="#FFE6F0" Foreground="#7B2A5A" BorderBrush="#F4A8C4" Padding="6" Margin="0,0,0,10" FontFamily="Segoe UI"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" >
+                        <Button Content="Start Quiz / Next" Width="160" Click="StartQuiz_Click" Background="#F48FB1" Margin="0,0,12,0" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#F7A3C2"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter Property="Background" Value="#D56B90"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button Content="Submit Answer" Width="160" Click="SubmitAnswer_Click" Background="#F06292" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#F47BA4"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter Property="Background" Value="#C64E69"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </StackPanel>
+                    <TextBlock x:Name="QuizFeedback" Margin="12,12,0,0" Foreground="#D147A3" FontWeight="Bold" FontSize="15" FontFamily="Segoe UI"/>
+                </StackPanel>
+            </TabItem>
+
+            <!-- Activity Log Tab -->
+            <TabItem Header="📜 Activity Log" Background="#FFF5FA">
+                <StackPanel Margin="10">
+                    <TextBlock Text="Recent Bot Activities" FontWeight="Bold" FontSize="22" Foreground="#D147A3" Margin="0,0,0,10" FontFamily="Segoe Script"/>
+                    <Button Content="Show Activity Log" Click="ShowLog_Click" Margin="0,10,0,15" Width="190" Height="38" Background="#F48FB1" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#F7A3C2"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter Property="Background" Value="#D56B90"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Border BorderBrush="#F4A8C4" BorderThickness="2" Background="White" Padding="8">
+                        <ScrollViewer Height="250">
+                            <TextBlock x:Name="ActivityOutput" TextWrapping="Wrap" Foreground="#7B2A5A" FontSize="14" FontFamily="Segoe UI"/>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </TabItem>
+
+        </TabControl>
+    </Grid>
+</Window>
