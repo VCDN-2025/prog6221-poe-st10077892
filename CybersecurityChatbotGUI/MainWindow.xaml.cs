@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Media;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
@@ -22,7 +24,6 @@ namespace CybersecurityChatbotGUI
         {
             InitializeComponent();
 
-            // Setup reminder timer
             reminderTimer.Interval = TimeSpan.FromSeconds(10);
             reminderTimer.Tick += ReminderTimer_Tick;
             reminderTimer.Start();
@@ -46,11 +47,45 @@ namespace CybersecurityChatbotGUI
             string input = UserInput.Text;
             if (!string.IsNullOrWhiteSpace(input))
             {
-                string response = chatManager.GetResponse(input);
-                ChatOutput.Text += $"\nYou: {input}\nBot: {response}";
-                activityLog.Add($"User: {input} -> Bot: {response}");
+                string lowerInput = input.ToLower();
 
-                // Check if input was a task deletion command
+                // NLP Simulation: Check for reminder phrases
+                if (lowerInput.Contains("remind me to") || lowerInput.Contains("set a reminder to"))
+                {
+                    string taskTitle = ExtractReminderTitle(lowerInput);
+                    DateTime? reminderDate = DetectDatePhrase(lowerInput);
+
+                    taskManager.AddTask(taskTitle, taskTitle, reminderDate);
+                    chatManager.Tasks.Add(new TaskItem
+                    {
+                        Title = taskTitle,
+                        Description = taskTitle,
+                        Reminder = reminderDate ?? DateTime.MinValue
+                    });
+
+                    string response = $"Reminder set for '{taskTitle}'";
+                    if (reminderDate.HasValue)
+                        response += $" on {reminderDate.Value:dddd, dd MMMM}";
+
+                    ChatOutput.Text += $"\nYou: {input}\nBot: {response}";
+                    activityLog.Add($"Reminder added: {taskTitle} -> {reminderDate?.ToShortDateString() ?? "No date"}");
+                    UserInput.Clear();
+                    return;
+                }
+
+                // NLP Simulation: Summary of recent actions
+                if (lowerInput.Contains("what have you done") || lowerInput.Contains("summary") || lowerInput.Contains("activity"))
+                {
+                    var recent = activityLog.Count > 0 ? string.Join("\n", activityLog) : "No recent activity.";
+                    ChatOutput.Text += $"\nYou: {input}\nBot: Here's a summary of recent actions:\n{recent}";
+                    UserInput.Clear();
+                    return;
+                }
+
+                string responseText = chatManager.GetResponse(input);
+                ChatOutput.Text += $"\nYou: {input}\nBot: {responseText}";
+                activityLog.Add($"User: {input} -> Bot: {responseText}");
+
                 if (input.ToLower().StartsWith("delete task"))
                 {
                     string title = input.Substring("delete task".Length).Trim();
@@ -69,6 +104,27 @@ namespace CybersecurityChatbotGUI
 
                 UserInput.Clear();
             }
+        }
+
+        private string ExtractReminderTitle(string input)
+        {
+            Match match = Regex.Match(input, @"remind me to (.+)");
+            if (!match.Success)
+                match = Regex.Match(input, @"set a reminder to (.+)");
+            return match.Success ? CultureInfo.CurrentCulture.TextInfo.ToTitleCase(match.Groups[1].Value.Trim()) : "Unnamed Task";
+        }
+
+        private DateTime? DetectDatePhrase(string input)
+        {
+            input = input.ToLower();
+            if (input.Contains("tomorrow"))
+                return DateTime.Today.AddDays(1);
+            if (input.Contains("today"))
+                return DateTime.Today;
+            if (input.Contains("next week"))
+                return DateTime.Today.AddDays(7);
+
+            return null;
         }
 
         private void AddTask_Click(object sender, RoutedEventArgs e)
@@ -104,6 +160,22 @@ namespace CybersecurityChatbotGUI
                 QuizFeedback.Text = feedback;
                 activityLog.Add($"Answered: {answer} -> Feedback: {feedback}");
                 QuizAnswer.Clear();
+
+                if (quizManager.IsQuizComplete())
+                {
+                    int score = quizManager.GetScore();
+                    int total = quizManager.GetTotalQuestions();
+                    string message = $"Quiz complete! Score: {score}/{total}\n";
+
+                    if (score == total)
+                        message += "🌟 Perfect! You're a cybersecurity master!";
+                    else if (score >= total * 0.7)
+                        message += "✅ Great job! You're a cybersecurity pro!";
+                    else
+                        message += "📚 Keep learning to stay safe online.";
+
+                    MessageBox.Show(message, "Quiz Completed", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
         }
 

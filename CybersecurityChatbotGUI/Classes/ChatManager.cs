@@ -50,7 +50,28 @@ namespace CybersecurityChatbotGUI.Classes
                 }
             }
 
-            // 3. Task addition
+            // 3. NLP task/reminder detection
+            if (lowerInput.Contains("remind me to") || lowerInput.Contains("set a reminder") || lowerInput.Contains("add a task"))
+            {
+                string title = ExtractTaskTitle(input);
+                DateTime? date = ParseNaturalDate(input);
+
+                var task = new TaskItem
+                {
+                    Title = title,
+                    Description = $"Cybersecurity task: {title}",
+                    Reminder = date ?? DateTime.Now.AddDays(1)
+                };
+
+                Tasks.Add(task);
+
+                if (date.HasValue)
+                    return $"🔔 Reminder set for \"{title}\" on {date.Value:dd MMM yyyy}.";
+                else
+                    return $"📝 Task added: \"{title}\". Reminder set for tomorrow by default.";
+            }
+
+            // 4. Manual task addition
             if (lowerInput.StartsWith("add task"))
             {
                 var taskText = input.Substring("add task".Length).Trim();
@@ -64,39 +85,26 @@ namespace CybersecurityChatbotGUI.Classes
                 return "Please specify a task after saying 'Add task'.";
             }
 
-            // 4. Reminder parsing
+            // 5. Follow-up reminder parsing
             if (waitingForReminder && (lowerInput.Contains("remind me") || lowerInput.StartsWith("yes")))
             {
-                DateTime reminderDate = DateTime.Now;
-                var match = Regex.Match(lowerInput, @"in (\d+) (day|days|week|weeks)");
-                if (match.Success)
+                DateTime reminderDate = ParseNaturalDate(input) ?? DateTime.Now.AddDays(1);
+
+                Tasks.Add(new TaskItem
                 {
-                    int amount = int.Parse(match.Groups[1].Value);
-                    string unit = match.Groups[2].Value;
+                    Title = pendingTaskTitle,
+                    Description = pendingTaskDescription,
+                    Reminder = reminderDate
+                });
 
-                    reminderDate = unit.StartsWith("week")
-                        ? DateTime.Now.AddDays(amount * 7)
-                        : DateTime.Now.AddDays(amount);
+                waitingForReminder = false;
+                pendingTaskTitle = string.Empty;
+                pendingTaskDescription = string.Empty;
 
-                    Tasks.Add(new TaskItem
-                    {
-                        Title = pendingTaskTitle,
-                        Description = pendingTaskDescription,
-                        Reminder = reminderDate
-                    });
-
-                    // Reset state
-                    waitingForReminder = false;
-                    pendingTaskTitle = string.Empty;
-                    pendingTaskDescription = string.Empty;
-
-                    return $"Got it! I'll remind you in {amount} {unit}.";
-                }
-
-                return "Okay, please specify when you want to be reminded, like 'in 3 days'.";
+                return $"Got it! I'll remind you on {reminderDate:dd MMM yyyy}.";
             }
 
-            // 5. View tasks
+            // 6. View tasks
             if (lowerInput == "view tasks")
             {
                 if (Tasks.Count == 0)
@@ -106,12 +114,30 @@ namespace CybersecurityChatbotGUI.Classes
                 for (int i = 0; i < Tasks.Count; i++)
                 {
                     var task = Tasks[i];
-                    taskList += $"- {task.Title}: {task.Description} (Remind on: {task.Reminder.ToShortDateString()})\n";
+                    taskList += $"- {task.Title}: {task.Description} (Remind on: {task.Reminder:dd MMM yyyy})\n";
                 }
                 return taskList;
             }
 
-            // Knowledge base fallback
+            // 7. "What have you done for me?"
+            if (lowerInput.Contains("what have you done for me"))
+            {
+                if (Tasks.Count == 0)
+                    return "I haven’t done anything for you yet.";
+
+                string summary = "Here’s a summary of recent actions:\n";
+                int count = 1;
+                foreach (var task in Tasks)
+                {
+                    summary += $"{count++}. Task: \"{task.Title}\"";
+                    if (task.Reminder != DateTime.MinValue)
+                        summary += $" – Reminder: {task.Reminder:dd MMM yyyy}";
+                    summary += "\n";
+                }
+                return summary;
+            }
+
+            // Fallback responses
             if (knowledgeBase.TryGetResponse(input, out var directResponse))
                 return directResponse;
 
@@ -126,13 +152,48 @@ namespace CybersecurityChatbotGUI.Classes
 
             return $"I'm still learning, {userName}. Can you ask that in another way?";
         }
+
+        private string ExtractTaskTitle(string input)
+        {
+            var lower = input.ToLower();
+            if (lower.Contains("to"))
+            {
+                int index = lower.IndexOf("to");
+                return input.Substring(index + 3).Trim();
+            }
+            return input;
+        }
+
+        private DateTime? ParseNaturalDate(string input)
+        {
+            string lower = input.ToLower();
+
+            if (lower.Contains("tomorrow"))
+                return DateTime.Now.AddDays(1);
+
+            if (lower.Contains("next week"))
+                return DateTime.Now.AddDays(7);
+
+            if (lower.Contains("in 3 days"))
+                return DateTime.Now.AddDays(3);
+
+            var match = Regex.Match(lower, @"in (\d+) (day|days|week|weeks)");
+            if (match.Success)
+            {
+                int amount = int.Parse(match.Groups[1].Value);
+                string unit = match.Groups[2].Value;
+
+                return unit.StartsWith("week") ? DateTime.Now.AddDays(amount * 7) : DateTime.Now.AddDays(amount);
+            }
+
+            return null;
+        }
     }
 
-    // Simple task class
     public class TaskItem
     {
-        public string Title { get; set; }
-        public string Description { get; set; }
+        public string? Title { get; set; }
+        public string? Description { get; set; }
         public DateTime Reminder { get; set; }
     }
 }
